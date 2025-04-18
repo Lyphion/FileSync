@@ -1,0 +1,20 @@
+name: FileSync
+version: '${version}'
+main: dev.lyphium.filesync.FileSync
+api-version: '1.21.4'
+prefix: FileSync
+load: STARTUP
+author: Lyphion
+description: Synchronise files and folders between servers
+website: https://github.com/Lyphion/FileSync
+
+permissions:
+  filesync.admin:
+    description: Admin permission
+    default: op
+
+commands:
+  filesync:
+    description: Central command for file sync
+    permission: filesync.admin
+    usage: /filesync help
