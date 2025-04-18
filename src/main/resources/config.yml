@@ -1,0 +1,18 @@
+# Sync on startup/reload
+StartUpSync: true
+
+# Whether this server is in read only mode (receiving updates, instead of publishing them)
+ReadOnly: true
+
+# Shared location relative to server jar, where the objects are stored
+SharedLocation: "../Share"
+
+# Collection of files/folders to synchronise
+Synchronizations:
+  # Name of the shared object
+  Help:
+    # Locations to synchronise relative to server jar, must be inside the server folder!
+    Locations:
+      - "help.yml"
+    # Command to execute when changes are processed
+    Command: "say synchronized"

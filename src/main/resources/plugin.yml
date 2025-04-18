@@ -3,9 +3,9 @@ version: '${version}'
 main: dev.lyphium.filesync.FileSync
 api-version: '1.21.4'
 prefix: FileSync
-load: STARTUP
+load: POSTWORLD
 author: Lyphion
-description: Synchronise files and folders between servers
+description: Synchronize files and folders between servers
 website: https://github.com/Lyphion/FileSync
 
 permissions:
@@ -17,4 +17,4 @@ commands:
   filesync:
     description: Central command for file sync
     permission: filesync.admin
-    usage: /filesync help
+    usage: /filesync <reload> | <publish> <Name>
