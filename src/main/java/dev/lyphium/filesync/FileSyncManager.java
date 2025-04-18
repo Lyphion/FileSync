@@ -21,7 +21,7 @@ public final class FileSyncManager {
     private final JavaPlugin plugin;
     private final Path serverPath = Bukkit.getWorldContainer().toPath();
 
-    private static final Path metadata = Paths.get(".info");
+    private static final String metadata = ".info";
 
     @Getter
     private boolean readonly;
@@ -173,7 +173,7 @@ public final class FileSyncManager {
             copy(src, serverPath.resolve(location));
         }
 
-        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), object.command());
+        Bukkit.getScheduler().runTask(plugin, () -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), object.command()));
         plugin.getLogger().log(Level.INFO, "Synchronized object " + object.name() + " (version " + version + ")");
     }
 
@@ -225,26 +225,22 @@ public final class FileSyncManager {
                     continue;
 
                 @SuppressWarnings("unchecked") WatchEvent<Path> ev = (WatchEvent<Path>) event;
-                final Path filename = ev.context();
-                try {
-                    // Check if info file was updated, otherwise ignore event
-                    final Path root = (Path) key.watchable();
-                    if (!Files.isSameFile(root.resolve(filename), sharedLocation.resolve(metadata)))
-                        continue;
-                } catch (IOException e) {
-                    plugin.getLogger().log(Level.SEVERE, "Failed to read info file", e);
+                final Path root = (Path) key.watchable();
+                final Path file = root.resolve(ev.context());
+
+                // Check if info file was updated, otherwise ignore event
+                if (!ev.context().endsWith(metadata))
                     continue;
-                }
 
                 // Read version from info file
-                final String name = nameLookup.get(filename.toAbsolutePath().toString());
+                final String name = nameLookup.get(file.toAbsolutePath().toString());
                 final SynchronisedObject object = objects.get(name);
 
                 final String version;
                 try {
-                    version = Files.readString(filename);
+                    version = Files.readString(file);
                 } catch (IOException e) {
-                    plugin.getLogger().warning("Failed to read file: " + filename);
+                    plugin.getLogger().warning("Failed to read file: " + file);
                     continue;
                 }
 

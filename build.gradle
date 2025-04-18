@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'dev.lyphium'
-version = '1.0'
+version = '1.0.2'
 
 dependencies {
     paperweight.paperDevBundle("1.21.4-R0.1-SNAPSHOT")
