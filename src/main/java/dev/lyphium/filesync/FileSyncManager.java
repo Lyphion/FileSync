@@ -257,11 +257,13 @@ public final class FileSyncManager {
      * Disable watching.
      */
     public void disable() {
-        syncTask.cancel();
+        if (syncTask != null)
+            syncTask.cancel();
 
         try {
             watchKeys.forEach(WatchKey::cancel);
-            watcher.close();
+            if (watcher != null)
+                watcher.close();
         } catch (IOException e) {
             plugin.getLogger().warning("Failed to close watcher: " + e.getMessage());
         }
