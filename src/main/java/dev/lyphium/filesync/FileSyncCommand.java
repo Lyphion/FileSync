@@ -1,90 +1,73 @@
 package dev.lyphium.filesync;
 
+import com.mojang.brigadier.Command;
+import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.tree.LiteralCommandNode;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
+import io.papermc.paper.command.brigadier.Commands;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.TextColor;
-import org.bukkit.command.*;
-import org.jetbrains.annotations.NotNull;
+import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.command.CommandSender;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.List;
+import java.util.Locale;
 
-public final class FileSyncCommand implements CommandExecutor, TabCompleter {
+public final class FileSyncCommand {
+
+    public static final String DESCRIPTION = "Central command for file sync";
+    public static final String PERMISSION = "filesync.admin";
 
     private final FileSyncManager fileSyncManager;
 
-    public FileSyncCommand(@NotNull FileSyncManager fileSyncManager) {
+    public FileSyncCommand(FileSyncManager fileSyncManager) {
         this.fileSyncManager = fileSyncManager;
     }
 
-    @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String @NotNull [] args) {
-        if (args[0].equalsIgnoreCase("reload")) {
-            if (args.length != 1)
-                return false;
+    public LiteralCommandNode<CommandSourceStack> construct() {
+        return Commands.literal("filesync").requires(s -> s.getSender().hasPermission(PERMISSION))
+                .then(Commands.literal("reload").executes(ctx -> {
+                    final CommandSender sender = ctx.getSource().getSender();
+                    fileSyncManager.loadConfig();
+                    sender.sendActionBar(Component.text("FileSync Reloaded", NamedTextColor.GREEN));
 
-            fileSyncManager.loadConfig();
-            sender.sendActionBar(Component.text("FileSync Reloaded", TextColor.color(0x1EFF41)));
-            return true;
-        } else if (args[0].equalsIgnoreCase("publish")) {
-            if (fileSyncManager.isReadonly()) {
-                sender.sendActionBar(Component.text("Server is in readonly mode", TextColor.color(0xFF3500)));
-                return true;
-            }
+                    return Command.SINGLE_SUCCESS;
+                }))
+                .then(Commands.literal("publish").requires(s -> !fileSyncManager.isReadonly())
+                        .then(Commands.argument("object", StringArgumentType.greedyString())
+                                .suggests((ctx, builder) -> {
+                                    fileSyncManager.getObjects().keySet()
+                                            .stream()
+                                            .filter(name -> name.toLowerCase(Locale.ROOT).contains(builder.getRemainingLowerCase()))
+                                            .forEach(builder::suggest);
 
-            if (args.length != 2)
-                return false;
+                                    return builder.buildFuture();
+                                })
+                                .executes(ctx -> {
+                                    final CommandSender sender = ctx.getSource().getSender();
+                                    final String obj = StringArgumentType.getString(ctx, "object");
 
-            for (final SynchronisedObject object : fileSyncManager.getObjects().values()) {
-                if (object.name().equalsIgnoreCase(args[1])) {
-                    final String version = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss").format(LocalDateTime.now());
-                    final boolean success = fileSyncManager.publish(object, version);
+                                    for (final SynchronisedObject object : fileSyncManager.getObjects().values()) {
+                                        if (!object.name().equalsIgnoreCase(obj))
+                                            continue;
 
-                    if (success) {
-                        sender.sendActionBar(Component.text("New version published", TextColor.color(0x1EFF41)));
-                    } else {
-                        sender.sendActionBar(Component.text("Error publishing version", TextColor.color(0xFF3500)));
-                    }
-                    return true;
-                }
-            }
+                                        final String version = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss").format(LocalDateTime.now());
+                                        final boolean success = fileSyncManager.publish(object, version);
 
-            sender.sendActionBar(Component.text("Unknown object", TextColor.color(0xFF3500)));
-            return true;
-        }
+                                        if (success) {
+                                            sender.sendActionBar(Component.text("New version published", NamedTextColor.GREEN));
+                                        } else {
+                                            sender.sendActionBar(Component.text("Error publishing version", NamedTextColor.RED));
+                                        }
 
-        return false;
-    }
+                                        return Command.SINGLE_SUCCESS;
+                                    }
 
-    @Override
-    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String @NotNull [] args) {
-        final String name = args[0].toLowerCase();
-
-        if (args.length == 1) {
-            final String[] completions = fileSyncManager.isReadonly() ? new String[]{"reload"} : new String[]{"reload", "publish"};
-            return Arrays.stream(completions)
-                    .filter(s -> s.startsWith(name))
-                    .toList();
-        }
-
-        if (args.length == 2 && name.equals("publish") && !fileSyncManager.isReadonly()) {
-            return fileSyncManager.getObjects().keySet()
-                    .stream()
-                    .filter(s -> s.startsWith(name))
-                    .toList();
-        }
-
-        return List.of();
-    }
-
-    /**
-     * Set this object as an executor and tab completer for the command.
-     *
-     * @param command Command to be handled.
-     */
-    public void register(@NotNull PluginCommand command) {
-        command.setExecutor(this);
-        command.setTabCompleter(this);
+                                    sender.sendActionBar(Component.text("Unknown object", NamedTextColor.RED));
+                                    return Command.SINGLE_SUCCESS;
+                                })
+                        )
+                )
+                .build();
     }
 }

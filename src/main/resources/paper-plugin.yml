@@ -1,7 +1,7 @@
 name: FileSync
 version: '${version}'
 main: dev.lyphium.filesync.FileSync
-api-version: '1.21.4'
+api-version: '1.21'
 prefix: FileSync
 load: POSTWORLD
 author: Lyphion
@@ -12,9 +12,3 @@ permissions:
   filesync.admin:
     description: Admin permission
     default: op
-
-commands:
-  filesync:
-    description: Central command for file sync
-    permission: filesync.admin
-    usage: /filesync <reload> | <publish> <Name>

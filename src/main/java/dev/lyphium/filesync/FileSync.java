@@ -1,25 +1,32 @@
 package dev.lyphium.filesync;
 
+import io.papermc.paper.command.brigadier.Commands;
+import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import org.bukkit.plugin.java.JavaPlugin;
-
-import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 public final class FileSync extends JavaPlugin {
 
-    private FileSyncManager fileSyncManager;
+    private @Nullable FileSyncManager fileSyncManager;
 
     @Override
     public void onEnable() {
         fileSyncManager = new FileSyncManager(this);
 
-        new FileSyncCommand(fileSyncManager).register(Objects.requireNonNull(getCommand("filesync")));
+        getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
+            final Commands registrar = commands.registrar();
+
+            final FileSyncCommand fileSyncCommand = new FileSyncCommand(fileSyncManager);
+            registrar.register(fileSyncCommand.construct(), FileSyncCommand.DESCRIPTION);
+        });
 
         getLogger().info("Plugin activated");
     }
 
     @Override
     public void onDisable() {
-        fileSyncManager.disable();
+        if (fileSyncManager != null)
+            fileSyncManager.disable();
 
         getLogger().info("Plugin deactivated");
     }

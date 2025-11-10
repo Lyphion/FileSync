@@ -7,7 +7,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
-import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.nio.file.*;
@@ -32,10 +32,10 @@ public final class FileSyncManager {
     private final Map<String, String> nameLookup = new HashMap<>();
 
     private final List<WatchKey> watchKeys = new ArrayList<>();
-    private WatchService watcher;
-    private BukkitTask syncTask;
+    private @Nullable WatchService watcher;
+    private @Nullable BukkitTask syncTask;
 
-    public FileSyncManager(@NotNull JavaPlugin plugin) {
+    public FileSyncManager(JavaPlugin plugin) {
         this.plugin = plugin;
 
         loadConfig();
@@ -129,7 +129,7 @@ public final class FileSyncManager {
      * @param version Version of the object
      * @return {@code true} if publish was successful.
      */
-    public boolean publish(@NotNull SynchronisedObject object, @NotNull String version) {
+    public boolean publish(SynchronisedObject object, String version) {
         final Path root = sharedLocation.resolve(object.name() + "/" + version);
 
         // Copy all files to shared folder
@@ -160,7 +160,7 @@ public final class FileSyncManager {
      * @param object  Object to synchronize
      * @param version Version of the object
      */
-    private void sync(@NotNull SynchronisedObject object, @NotNull String version) {
+    private void sync(SynchronisedObject object, String version) {
         final Path root = sharedLocation.resolve(object.name() + "/" + version);
 
         // Copy all files to server folders
@@ -184,7 +184,7 @@ public final class FileSyncManager {
      * @param target Copy target
      * @return {@code true} if copy was successful.
      */
-    private boolean copy(@NotNull Path src, @NotNull Path target) {
+    private boolean copy(Path src, Path target) {
         try {
             // Create parent folder
             if (Files.notExists(target.getParent()))
@@ -214,6 +214,7 @@ public final class FileSyncManager {
         while (true) {
             final WatchKey key;
             try {
+                assert watcher != null;
                 key = watcher.take();
             } catch (ClosedWatchServiceException | InterruptedException e) {
                 break;
