@@ -3,41 +3,38 @@ import xyz.jpenilla.resourcefactory.bukkit.Permission
 
 plugins {
     id("java")
-    id("io.papermc.paperweight.userdev") version "2.0.0-beta.19"
+    id("io.papermc.paperweight.userdev") version "2.0.0-beta.21"
     id("xyz.jpenilla.resource-factory-paper-convention") version "1.3.1"
 }
 
 group = "dev.lyphium"
-version = "2.0.1"
+version = "2.1.0"
 description = "Synchronize files and folders between servers"
 
 dependencies {
-    paperweight.paperDevBundle("1.21.11-R0.1-SNAPSHOT")
+    paperweight.paperDevBundle("26.1.2.build.+")
 
-    compileOnly("org.projectlombok:lombok:1.18.42")
-    annotationProcessor("org.projectlombok:lombok:1.18.42")
+    compileOnly("org.projectlombok:lombok:1.18.46")
+    annotationProcessor("org.projectlombok:lombok:1.18.46")
 
-    testCompileOnly("org.projectlombok:lombok:1.18.42")
-    testAnnotationProcessor("org.projectlombok:lombok:1.18.42")
+    testCompileOnly("org.projectlombok:lombok:1.18.46")
+    testAnnotationProcessor("org.projectlombok:lombok:1.18.46")
 }
 
 java {
-    // Configure the java toolchain. This allows gradle to auto-provision JDK 21 on systems that only have JDK 11 installed for example.
-    toolchain.languageVersion = JavaLanguageVersion.of(21)
+    toolchain.languageVersion = JavaLanguageVersion.of(25)
 }
 
 tasks {
     compileJava {
-        // Set the release flag. This configures what version bytecode the compiler will emit, as well as what JDK APIs are usable.
-        // See https://openjdk.java.net/jeps/247 for more information.
-        options.release = 21
+        options.release = 25
     }
 }
 
 paperPluginYaml {
     main = "dev.lyphium.filesync.FileSync"
     load = BukkitPluginYaml.PluginLoadOrder.POSTWORLD
-    apiVersion = "1.21.11"
+    apiVersion = "26.1.2"
     author = "Lyphion"
     website = "https://github.com/Lyphion/FileSync"
     permissions {
